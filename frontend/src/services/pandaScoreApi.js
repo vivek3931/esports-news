@@ -1,8 +1,8 @@
-import { pandaScoreApi } from './api';
+import backendApi from './api.js'
 
 export const getLiveMatches = async (params = {}) => {
     try {
-        const response = await pandaScoreApi.get('/matches/running', {
+        const response = await backendApi.get('/api/matches/running', {
             params: {
                 sort: 'begin_at',
                 ...params,
@@ -17,7 +17,7 @@ export const getLiveMatches = async (params = {}) => {
 
 export const getUpcomingMatches = async (params = {}) => {
     try {
-        const response = await pandaScoreApi.get('/matches/upcoming', {
+        const response = await backendApi.get('/api/matches/upcoming', {
             params: {
                 sort: 'begin_at',
                 ...params,
@@ -32,7 +32,7 @@ export const getUpcomingMatches = async (params = {}) => {
 
 export const getTournaments = async (params = {}) => {
     try {
-        const response = await pandaScoreApi.get('/tournaments', {
+        const response = await backendApi.get('/api/tournaments', {
             params: {
                 sort: '-begin_at',
                 ...params,

@@ -1,8 +1,8 @@
-import { newsApi } from './api';
+import backendApi from './api.js'
 
 export const getEsportsNews = async (params = {}) => {
     try {
-        const response = await newsApi.get('/everything', {
+        const response = await backendApi.get('/api/news', {
             params: {
                 q: 'esports OR gaming',
                 language: 'en',
@@ -10,7 +10,7 @@ export const getEsportsNews = async (params = {}) => {
                 ...params,
             },
         });
-        return response.data.articles;
+        return response.data.articles || [];
     } catch (error) {
         console.error('Error fetching news:', error);
         return [];
@@ -19,8 +19,7 @@ export const getEsportsNews = async (params = {}) => {
 
 export const getTopHeadlines = async (params = {}) => {
     try {
-        // Switch to /everything endpoint as /top-headlines with 'esports' query often returns empty results
-        const response = await newsApi.get('/everything', {
+        const response = await backendApi.get('/api/news', {
             params: {
                 q: 'esports OR "competitive gaming"',
                 language: 'en',
@@ -29,7 +28,7 @@ export const getTopHeadlines = async (params = {}) => {
                 ...params,
             },
         });
-        return response.data.articles;
+        return response.data.articles || [];
     } catch (error) {
         console.error('Error fetching headlines:', error);
         return [];
