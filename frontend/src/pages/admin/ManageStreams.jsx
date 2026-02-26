@@ -127,7 +127,7 @@ const ManageStreams = () => {
                 </form>
             </div>
 
-            <div className="bg-[#18181B] rounded-xl border border-white/5 shadow-lg overflow-hidden">
+            <div className="bg-[#18181B] rounded-xl border border-white/5 shadow-lg overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-800">
                     <thead className="bg-[#1E1E24]">
                         <tr>
