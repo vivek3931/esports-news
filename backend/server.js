@@ -2,8 +2,17 @@ import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import connectDB from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
+import tournamentRoutes from './routes/tournamentRoutes.js';
+import teamRoutes from './routes/teamRoutes.js';
+import gameRoutes from './routes/gameRoutes.js';
+import streamRoutes from './routes/streamRoutes.js';
 
 dotenv.config();
+
+// Connect to database
+connectDB();
 
 const app = express();
 app.use(cors());
@@ -14,6 +23,9 @@ app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`, req.query);
   next();
 });
+
+// Authentication Routes
+app.use('/api/auth', authRoutes);
 
 // News API Proxy
 app.get('/api/news', async (req, res) => {
@@ -30,7 +42,7 @@ app.get('/api/news', async (req, res) => {
         apiKey: process.env.NEWS_API_KEY,
       },
     });
-    
+
     console.log('News API Response:', response.status);
     res.json(response.data);
   } catch (error) {
@@ -41,133 +53,11 @@ app.get('/api/news', async (req, res) => {
   }
 });
 
-// PandaScore API Proxy - Tournaments
-app.get('/api/tournaments', async (req, res) => {
-  try {
-    const response = await axios.get('https://api.pandascore.co/tournaments', {
-      headers: { 
-        'Authorization': `Bearer ${process.env.PANDASCORE_API_KEY}`,
-        'Accept': 'application/json',
-      },
-      params: {
-        sort: req.query.sort || '-begin_at',
-        page: req.query.page || 1,
-        per_page: req.query.per_page || 50,
-        ...req.query,
-      },
-    });
-    
-    console.log('Tournaments API Response:', response.status);
-    res.json(response.data);
-  } catch (error) {
-    console.error('Tournaments API Error:', error.response?.data || error.message);
-    res.status(error.response?.status || 500).json({ 
-      error: error.response?.data || error.message 
-    });
-  }
-});
-
-// PandaScore API Proxy - Teams
-app.get('/api/teams', async (req, res) => {
-  try {
-    const response = await axios.get('https://api.pandascore.co/teams', {
-      headers: { 
-        'Authorization': `Bearer ${process.env.PANDASCORE_API_KEY}`,
-        'Accept': 'application/json',
-      },
-      params: {
-        page: req.query.page || 1,
-        per_page: req.query.per_page || 50,
-        ...req.query,
-      },
-    });
-    
-    console.log('Teams API Response:', response.status);
-    res.json(response.data);
-  } catch (error) {
-    console.error('Teams API Error:', error.response?.data || error.message);
-    res.status(error.response?.status || 500).json({ 
-      error: error.response?.data || error.message 
-    });
-  }
-});
-
-// PandaScore API Proxy - Games
-app.get('/api/games', async (req, res) => {
-  try {
-    const response = await axios.get('https://api.pandascore.co/videogames', {
-      headers: { 
-        'Authorization': `Bearer ${process.env.PANDASCORE_API_KEY}`,
-        'Accept': 'application/json',
-      },
-      params: {
-        page: req.query.page || 1,
-        per_page: req.query.per_page || 50,
-        ...req.query,
-      },
-    });
-    
-    console.log('Games API Response:', response.status);
-    res.json(response.data);
-  } catch (error) {
-    console.error('Games API Error:', error.response?.data || error.message);
-    res.status(error.response?.status || 500).json({ 
-      error: error.response?.data || error.message 
-    });
-  }
-});
-
-// PandaScore API Proxy - Upcoming Matches
-app.get('/api/matches/upcoming', async (req, res) => {
-  try {
-    const response = await axios.get('https://api.pandascore.co/matches/upcoming', {
-      headers: { 
-        'Authorization': `Bearer ${process.env.PANDASCORE_API_KEY}`,
-        'Accept': 'application/json',
-      },
-      params: {
-        sort: req.query.sort || 'begin_at',
-        page: req.query.page || 1,
-        per_page: req.query.per_page || 50,
-        ...req.query,
-      },
-    });
-    
-    console.log('Upcoming Matches API Response:', response.status);
-    res.json(response.data);
-  } catch (error) {
-    console.error('Upcoming Matches API Error:', error.response?.data || error.message);
-    res.status(error.response?.status || 500).json({ 
-      error: error.response?.data || error.message 
-    });
-  }
-});
-
-// PandaScore API Proxy - Live Matches
-app.get('/api/matches/running', async (req, res) => {
-  try {
-    const response = await axios.get('https://api.pandascore.co/matches/running', {
-      headers: { 
-        'Authorization': `Bearer ${process.env.PANDASCORE_API_KEY}`,
-        'Accept': 'application/json',
-      },
-      params: {
-        sort: req.query.sort || 'begin_at',
-        page: req.query.page || 1,
-        per_page: req.query.per_page || 50,
-        ...req.query,
-      },
-    });
-    
-    console.log('Live Matches API Response:', response.status);
-    res.json(response.data);
-  } catch (error) {
-    console.error('Live Matches API Error:', error.response?.data || error.message);
-    res.status(error.response?.status || 500).json({ 
-      error: error.response?.data || error.message 
-    });
-  }
-});
+// Custom API Routes
+app.use('/api/tournaments', tournamentRoutes);
+app.use('/api/teams', teamRoutes);
+app.use('/api/games', gameRoutes);
+app.use('/api/matches', streamRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
