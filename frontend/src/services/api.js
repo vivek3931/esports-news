@@ -25,6 +25,24 @@ const handleApiError = (error) => {
     return Promise.reject(error);
 };
 
-backendApi.interceptors.response.use((response) => response, handleApiError);
+backendApi.interceptors.request.use((config) => {
+    // Add Authorization header if token exists
+    const userInfoData = localStorage.getItem('userInfo');
+    if (userInfoData) {
+        try {
+            const parsed = JSON.parse(userInfoData);
+            if (parsed && parsed.token) {
+                config.headers.Authorization = `Bearer ${parsed.token}`;
+            }
+        } catch (e) {
+            console.error('Error parsing token from localStorage', e);
+        }
+    }
+    return config;
+});
+
+backendApi.interceptors.response.use((response) => {
+    return response;
+}, handleApiError);
 
 export default backendApi;

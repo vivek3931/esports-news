@@ -1,29 +1,45 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import { FiTrendingUp, FiUsers, FiArrowLeft, FiTwitter, FiGlobe } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import backendApi from '../services/api';
 
 const TeamDetail = () => {
     const { id } = useParams();
+    const [team, setTeam] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Mock data
-    const team = {
-        id,
-        name: "T1",
-        game: "League of Legends",
-        region: "LCK",
-        rank: 1,
-        logo: "https://placehold.co/150x150/000000/FFF?text=T1",
-        winRate: "78%",
-        description: "T1 is a South Korean esports organization operated by T1 Entertainment & Sports, a joint venture between SK Telecom and Comcast Spectacor.",
-        roster: [
-            { name: "Zeus", role: "Top", image: "https://placehold.co/60x60/333/FFF?text=Z" },
-            { name: "Oner", role: "Jungle", image: "https://placehold.co/60x60/333/FFF?text=O" },
-            { name: "Faker", role: "Mid", image: "https://placehold.co/60x60/333/FFF?text=F" },
-            { name: "Gumayusi", role: "Bot", image: "https://placehold.co/60x60/333/FFF?text=G" },
-            { name: "Keria", role: "Support", image: "https://placehold.co/60x60/333/FFF?text=K" }
-        ]
-    };
+    useEffect(() => {
+        const fetchTeam = async () => {
+            try {
+                // Not ideal, but currently we fetch all and find the one because the backend doesn't have a GET /:id route natively built for public use yet.
+                const { data } = await backendApi.get('/api/teams');
+                const found = data.find(t => t._id === id);
+                setTeam(found || null);
+            } catch (error) {
+                console.error("Failed to fetch team", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTeam();
+    }, [id]);
+
+    if (loading) {
+        return (
+            <Layout>
+                <div className="flex h-screen items-center justify-center text-white">Loading Team Details...</div>
+            </Layout>
+        );
+    }
+
+    if (!team) {
+        return (
+            <Layout>
+                <div className="flex h-screen items-center justify-center text-white">Team not found</div>
+            </Layout>
+        );
+    }
 
     return (
         <Layout>
@@ -35,17 +51,17 @@ const TeamDetail = () => {
 
                     <div className="flex flex-col md:flex-row items-center gap-8">
                         <div className="w-32 h-32 rounded-full bg-primary p-4 border border-white/10">
-                            <img src={team.logo} alt={team.name} className="w-full h-full object-contain" />
+                            <img src={team.image_url || `https://placehold.co/150x150/000000/FFF?text=${team.acronym || 'TBD'}`} alt={team.name} className="w-full h-full object-contain" />
                         </div>
 
                         <div className="text-center md:text-left flex-1">
                             <h1 className="text-4xl font-bold text-white mb-2">{team.name}</h1>
                             <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-text-secondary mb-4">
-                                <span className="px-3 py-1 bg-white/5 rounded-full">{team.game}</span>
-                                <span className="px-3 py-1 bg-white/5 rounded-full">{team.region}</span>
-                                <span className="flex items-center gap-1 text-accent-orange font-bold"><FiTrendingUp /> #{team.rank} Global</span>
+                                <span className="px-3 py-1 bg-white/5 rounded-full">{team.current_videogame?.name || 'Various'}</span>
+                                <span className="px-3 py-1 bg-white/5 rounded-full">{team.location || 'Global'}</span>
+                                <span className="flex items-center gap-1 text-accent-orange font-bold"><FiTrendingUp /> Active</span>
                             </div>
-                            <p className="text-text-secondary max-w-2xl">{team.description}</p>
+                            <p className="text-text-secondary max-w-2xl">{team.name} competes in {team.current_videogame?.name || 'various games'} around the world.</p>
                         </div>
 
                         <div className="flex gap-4">
@@ -59,13 +75,15 @@ const TeamDetail = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <h2 className="text-2xl font-bold text-white mb-6">Active Roster</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    {team.roster.map((player) => (
+                    {team.players?.length > 0 ? team.players.map((player) => (
                         <div key={player.name} className="bg-secondary rounded-xl p-4 border border-white/5 hover:border-accent-cyan/50 transition-colors text-center">
-                            <img src={player.image} alt={player.name} className="w-16 h-16 rounded-full mx-auto mb-3 bg-primary" />
+                            <img src={player.image_url || `https://placehold.co/60x60/333/FFF?text=${player.name?.charAt(0) || 'P'}`} alt={player.name} className="w-16 h-16 rounded-full mx-auto mb-3 bg-primary" />
                             <h3 className="font-bold text-white">{player.name}</h3>
-                            <p className="text-sm text-text-secondary">{player.role}</p>
+                            <p className="text-sm text-text-secondary">{player.role || 'Player'}</p>
                         </div>
-                    ))}
+                    )) : (
+                        <div className="col-span-full py-8 text-center text-text-secondary">No players currently listed for this roster.</div>
+                    )}
                 </div>
             </div>
         </Layout>

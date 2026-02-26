@@ -1,29 +1,52 @@
 import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import { Calendar, Trophy, Users, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import backendApi from '../services/api';
 
 const TournamentDetail = () => {
     const { id } = useParams();
+    const [tournament, setTournament] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Mock data
-    const tournament = {
-        id,
-        name: "League of Legends World Championship 2024",
-        game: "League of Legends",
-        prizePool: "$2,225,000",
-        dates: "Sep 25 - Nov 2, 2024",
-        teams: 22,
-        status: "Live",
-        description: "The 2024 World Championship is the crowning event of League of Legends esports for the year. The tournament welcomes 22 teams from all regions of the game in a months-long race for the Summoner's Cup.",
-        image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1920&q=80"
-    };
+    useEffect(() => {
+        const fetchTournament = async () => {
+            try {
+                // Not ideal, but currently we fetch all and find the one because the backend doesn't have a GET /:id route natively built for public use yet.
+                const { data } = await backendApi.get('/api/tournaments');
+                const found = data.find(t => t._id === id);
+                setTournament(found || null);
+            } catch (error) {
+                console.error("Failed to fetch tournament", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTournament();
+    }, [id]);
+
+    if (loading) {
+        return (
+            <Layout>
+                <div className="flex h-screen items-center justify-center text-white">Loading Tournament Details...</div>
+            </Layout>
+        );
+    }
+
+    if (!tournament) {
+        return (
+            <Layout>
+                <div className="flex h-screen items-center justify-center text-white">Tournament not found</div>
+            </Layout>
+        );
+    }
 
     return (
         <Layout>
             <div className="relative h-[300px] w-full">
                 <div className="absolute inset-0">
-                    <img src={tournament.image} alt={tournament.name} className="w-full h-full object-cover" />
+                    <img src={tournament.league?.image_url || "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1920&q=80"} alt={tournament.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/80 to-transparent" />
                 </div>
                 <div className="absolute bottom-0 left-0 w-full p-8">
@@ -33,8 +56,8 @@ const TournamentDetail = () => {
                         </Link>
                         <h1 className="text-4xl font-bold text-white mb-2">{tournament.name}</h1>
                         <div className="flex items-center gap-6 text-text-secondary">
-                            <span className="text-accent-purple font-bold">{tournament.game}</span>
-                            <span className="flex items-center"><Calendar className="mr-2" /> {tournament.dates}</span>
+                            <span className="text-accent-purple font-bold">{tournament.videogame?.name}</span>
+                            <span className="flex items-center"><Calendar className="mr-2" /> {new Date(tournament.begin_at).toLocaleDateString()} - {new Date(tournament.end_at).toLocaleDateString()}</span>
                         </div>
                     </div>
                 </div>
@@ -45,38 +68,13 @@ const TournamentDetail = () => {
                     <div className="lg:col-span-2">
                         <div className="bg-secondary rounded-xl p-6 border border-white/5 mb-8">
                             <h2 className="text-xl font-bold text-white mb-4">About Tournament</h2>
-                            <p className="text-text-secondary leading-relaxed">{tournament.description}</p>
+                            <p className="text-text-secondary leading-relaxed">This tournament ({tournament.name}) is an officially sanctioned competitive event for {tournament.videogame?.name}. Hosted by the {tournament.league?.name || 'global'} league.</p>
                         </div>
 
                         <div className="bg-secondary rounded-xl p-6 border border-white/5">
                             <h2 className="text-xl font-bold text-white mb-6">Bracket</h2>
-                            {/* Simple Bracket Visualization */}
-                            <div className="flex justify-between items-center overflow-x-auto pb-4">
-                                <div className="flex flex-col gap-8 min-w-[150px]">
-                                    <div className="bg-primary p-3 rounded border border-white/10">
-                                        <div className="flex justify-between mb-1"><span className="font-bold text-white">T1</span> <span className="text-accent-orange">2</span></div>
-                                        <div className="flex justify-between"><span className="text-text-secondary">G2</span> <span>0</span></div>
-                                    </div>
-                                    <div className="bg-primary p-3 rounded border border-white/10">
-                                        <div className="flex justify-between mb-1"><span className="font-bold text-white">JDG</span> <span className="text-accent-orange">2</span></div>
-                                        <div className="flex justify-between"><span className="text-text-secondary">KT</span> <span>1</span></div>
-                                    </div>
-                                </div>
-                                <div className="w-8 h-0.5 bg-white/10"></div>
-                                <div className="flex flex-col gap-8 min-w-[150px]">
-                                    <div className="bg-primary p-3 rounded border border-white/10 mt-8">
-                                        <div className="flex justify-between mb-1"><span className="font-bold text-white">T1</span> <span className="text-accent-orange">3</span></div>
-                                        <div className="flex justify-between"><span className="text-text-secondary">JDG</span> <span>1</span></div>
-                                    </div>
-                                </div>
-                                <div className="w-8 h-0.5 bg-white/10"></div>
-                                <div className="flex flex-col gap-8 min-w-[150px]">
-                                    <div className="bg-primary p-3 rounded border border-accent-orange/50 mt-8 relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 p-1 bg-accent-orange text-[10px] text-white font-bold">WINNER</div>
-                                        <div className="flex justify-between mb-1"><span className="font-bold text-white">T1</span> <span className="text-accent-orange">3</span></div>
-                                        <div className="flex justify-between"><span className="text-text-secondary">WBG</span> <span>0</span></div>
-                                    </div>
-                                </div>
+                            <div className="text-text-secondary text-center py-8">
+                                Bracket information is not currently available for this tournament.
                             </div>
                         </div>
                     </div>
@@ -87,15 +85,15 @@ const TournamentDetail = () => {
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center border-b border-white/5 pb-2">
                                     <span className="text-text-secondary flex items-center"><Trophy className="mr-2" /> Prize Pool</span>
-                                    <span className="text-white font-bold">{tournament.prizePool}</span>
+                                    <span className="text-white font-bold">{tournament.tier === 'A' || tournament.tier === 'S' ? 'Major' : 'TBD'}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                                    <span className="text-text-secondary flex items-center"><Users className="mr-2" /> Teams</span>
-                                    <span className="text-white font-bold">{tournament.teams}</span>
+                                    <span className="text-text-secondary flex items-center"><Users className="mr-2" /> Tier</span>
+                                    <span className="text-white font-bold">{tournament.tier}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                                    <span className="text-text-secondary">Region</span>
-                                    <span className="text-white font-bold">International</span>
+                                    <span className="text-text-secondary">League</span>
+                                    <span className="text-white font-bold">{tournament.league?.name || 'International'}</span>
                                 </div>
                             </div>
                         </div>

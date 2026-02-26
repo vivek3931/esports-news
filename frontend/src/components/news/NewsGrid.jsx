@@ -4,14 +4,18 @@ import { FiClock, FiArrowRight } from 'react-icons/fi';
 import { getEsportsNews } from '../../services/newsApi';
 import { formatDistanceToNow } from 'date-fns';
 
-const NewsGrid = () => {
+const NewsGrid = ({ searchQuery = '' }) => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchNews = async () => {
+            setLoading(true);
             try {
-                const articles = await getEsportsNews({ pageSize: 8 });
+                const queryOptions = { pageSize: 8 };
+                if (searchQuery) queryOptions.q = searchQuery;
+
+                const articles = await getEsportsNews(queryOptions);
                 setNews(articles);
             } catch (error) {
                 console.error("Failed to fetch news", error);
@@ -21,7 +25,7 @@ const NewsGrid = () => {
         };
 
         fetchNews();
-    }, []);
+    }, [searchQuery]);
 
     if (loading) {
         return (

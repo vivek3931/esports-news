@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import NewsGrid from '../components/news/NewsGrid';
 import { FiFilter } from 'react-icons/fi';
 import clsx from 'clsx';
 
 const News = () => {
+    const [searchParams] = useSearchParams();
+    const searchQuery = searchParams.get('q') || '';
     const [activeFilter, setActiveFilter] = useState('All');
 
     const filters = ['All', 'League of Legends', 'VALORANT', 'CS2', 'Dota 2', 'Industry'];
@@ -34,7 +37,7 @@ const News = () => {
                     </div>
                 </div>
 
-                <NewsGrid />
+                <NewsGrid searchQuery={searchQuery} />
 
                 <div className="mt-12 text-center">
                     <button className="px-8 py-3 bg-secondary border border-white/10 text-white font-semibold rounded-lg hover:bg-white/5 transition-colors">
