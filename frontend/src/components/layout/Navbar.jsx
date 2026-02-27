@@ -27,8 +27,9 @@ const Navbar = () => {
                     {/* Logo */}
                     <div className="flex-shrink-0">
                         <Link to="/" className="flex items-center gap-2">
-                            <img src="/logo.png" alt="Gaming Zone Logo" className="h-[40px] w-auto drop-shadow-[0_0_15px_rgba(255,107,0,0.5)] transition-transform hover:scale-105" />
-                        </Link>
+<span className="text-2xl font-bold bg-gradient-to-r from-accent-orange to-accent-cyan bg-clip-text text-transparent">
+                                ESPORTS<span className="text-white">NEWS</span>
+                            </span>                        </Link>
                     </div>
 
                     {/* Desktop Navigation */}
